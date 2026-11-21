@@ -31,8 +31,8 @@ def test_discretizer_bounds():
 def test_q_update_bellman():
     ag = QLearningAgent(CONFIG)
     s, s2 = (0, 0, 0), (1, 1, 1)
-    ag.update(s, 1, 0.1, s2, False)
-    expected = 2.0 + 0.1 * (0.1 + 0.95 * 2.0 - 2.0)
+    ag.update(s, 1, 1.1, s2, False)
+    expected = 2.0 + 0.1 * (1.1 + 0.95 * 2.0 - 2.0)  # = 2.1
     assert abs(ag.Q[s + (1,)] - expected) < 1e-9
 
 
