@@ -62,45 +62,70 @@ PAGE = """<!doctype html><html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Agente Q-Learning · Flappy Bird</title>
 <style>
-body{font-family:Georgia,'Times New Roman',serif;background:#f4f6fa;color:#1a1a1a;margin:0}
-main{max-width:760px;margin:0 auto;padding:24px 16px}
-h1{color:#1f3864;font-size:1.6rem;margin:0 0 4px}
-p.sub{color:#555;margin:0 0 18px}
-.row{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
-canvas{background:#70c5ce;border:1px solid #1f3864;border-radius:4px;max-width:100%}
-.panel{flex:1;min-width:240px}
-label{display:block;font-size:.9rem;margin:10px 0 4px}
-input,select{padding:6px 8px;border:1px solid #9db0cf;border-radius:4px;width:100%;box-sizing:border-box}
-button{margin-top:14px;padding:8px 16px;background:#1f3864;color:#fff;border:0;border-radius:4px;cursor:pointer}
-.m{display:flex;gap:12px;margin-top:18px}.m div{flex:1;background:#fff;border:1px solid #d5ddec;border-radius:4px;padding:8px}
-.m b{display:block;font-size:1.3rem;color:#1f3864}
-small{color:#555}
-pre{background:#eef2f9;padding:10px;border-radius:4px;font-size:.8rem;overflow:auto}
-</style></head><body><main>
-<h1>Agente Q-Learning para Flappy Bird</h1>
-<p class="sub">IA Principios y Técnicas · UPAO (NRC 5028). Política greedy (ε = 0) sobre la Q-Table entrenada.</p>
-<div class="row">
-<canvas id="c" width="288" height="512"></canvas>
-<div class="panel">
-<label for="seed">Semilla del entorno <small>(10000–10199: semillas de prueba del informe)</small></label>
+:root{--navy:#1f3864;--line:#d5ddec;--bg:#f1f4fa}
+*{box-sizing:border-box}
+body{font-family:Georgia,'Times New Roman',serif;background:var(--bg);color:#111;margin:0}
+header{background:var(--navy);color:#fff;padding:22px 16px}
+header div{max-width:960px;margin:0 auto}
+header h1{margin:0;font-size:1.7rem;letter-spacing:.2px}
+header p{margin:6px 0 0;color:#d6e0f3;font-size:.95rem}
+main{max-width:960px;margin:0 auto;padding:22px 16px 40px;display:grid;grid-template-columns:320px 1fr;gap:22px}
+@media(max-width:760px){main{grid-template-columns:1fr}}
+.card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:16px;box-shadow:0 1px 3px rgba(31,56,100,.08)}
+.card h2{font-size:1rem;margin:0 0 12px;color:var(--navy);border-bottom:2px solid var(--navy);padding-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+canvas{display:block;margin:0 auto;border:2px solid var(--navy);border-radius:6px;max-width:100%;height:auto}
+label{display:block;font-size:.88rem;margin:12px 0 4px;font-weight:bold}
+input,select{padding:8px;border:1px solid #9db0cf;border-radius:4px;width:100%;font:inherit}
+.btns{display:flex;gap:8px;margin-top:14px}
+button{flex:1;padding:9px 12px;background:var(--navy);color:#fff;border:0;border-radius:4px;cursor:pointer;font:inherit}
+button.alt{background:#fff;color:var(--navy);border:1px solid var(--navy)}
+.m{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.m div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px;text-align:center}
+.m small{display:block;color:#333;font-size:.78rem}.m b{font-size:1.5rem;color:var(--navy)}
+table{width:100%;border-collapse:collapse;font-size:.88rem;margin-top:4px}
+td,th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}th{background:#d9e2f3}
+pre{background:var(--bg);padding:10px;border-radius:4px;font-size:.78rem;overflow:auto;margin:10px 0 0}
+small.h{color:#333;font-weight:normal}
+footer{text-align:center;font-size:.85rem;padding:0 16px 28px}footer a{color:var(--navy)}
+</style></head><body>
+<header><div><h1>Agente Q-Learning para Flappy Bird</h1>
+<p>IA Principios y Técnicas · UPAO (NRC 5028) — política greedy (ε = 0) sobre la Q-Table entrenada</p></div></header>
+<main>
+<section class="card"><h2>Partida</h2><canvas id="c" width="288" height="512"></canvas></section>
+<div>
+<section class="card"><h2>Control</h2>
+<div class="m"><div><small>Puntaje</small><b id="sc">–</b></div><div><small>Pasos</small><b id="st">–</b></div><div><small>Resultado</small><b id="rs" style="font-size:1.05rem">–</b></div></div>
+<label for="seed">Semilla del entorno <small class="h">(10000–10199: semillas de prueba del informe)</small></label>
 <input id="seed" type="number" value="10000" min="0">
 <label for="ms">Límite de pasos</label>
 <select id="ms"><option>500</option><option>1000</option><option selected>1500</option><option>3000</option></select>
-<button id="go">Jugar episodio</button>
-<div class="m"><div><small>Puntaje</small><b id="sc">–</b></div><div><small>Pasos</small><b id="st">–</b></div><div><small>Resultado</small><b id="rs">–</b></div></div>
-<p><small id="act"></small></p>
+<label for="sp">Velocidad</label>
+<select id="sp"><option value="45">Lenta</option><option value="25" selected>Normal</option><option value="10">Rápida</option></select>
+<div class="btns"><button id="go">Jugar episodio</button><button id="rnd" class="alt">Semilla al azar</button></div>
+<p id="act" style="margin:12px 0 0;font-size:.9rem"></p></section>
+<section class="card" style="margin-top:18px"><h2>Resultados del informe (semilla 42)</h2>
+<table><tr><th>Métrica (200 ep. de prueba)</th><th>Valor</th></tr>
+<tr><td>Puntaje medio</td><td>98.7</td></tr><tr><td>Puntaje máximo</td><td>221</td></tr>
+<tr><td>Supervivencia</td><td>11.5 %</td></tr><tr><td>Agente aleatorio</td><td>0.0</td></tr></table>
 <pre>Q(s,a) ← Q(s,a) + α[r + γ·max Q(s',a') − Q(s,a)]
-estado (dx, dy, vel) → 15×20×12 = 3 600 estados</pre>
-</div></div></main>
+estado (dx, dy, vel) → 15×20×12 = 3 600 estados</pre></section>
+</div></main>
+<footer><a href="https://github.com/sebastian-yengle08/Flappy_Bird" target="_blank" rel="noopener">Código en GitHub</a> ·
+<a href="https://colab.research.google.com/drive/1pZurb6Atj5QT_7hb1Ha10muqQY7Yf_aH" target="_blank" rel="noopener">Cuaderno de Colab</a></footer>
 <script>
 const cv=document.getElementById('c'),g=cv.getContext('2d');let timer=null;
-function draw(f,E){const[y,pipes,score]=f;g.fillStyle='#70c5ce';g.fillRect(0,0,E.W,E.GROUND);g.fillStyle='#ded895';g.fillRect(0,E.GROUND,E.W,E.H-E.GROUND);
-g.fillStyle='#5aa02c';g.strokeStyle='#000';for(const[x,cy]of pipes){g.fillRect(x,0,E.PIPE_W,cy-E.GAP/2);g.strokeRect(x,0,E.PIPE_W,cy-E.GAP/2);
-g.fillRect(x,cy+E.GAP/2,E.PIPE_W,E.GROUND-cy-E.GAP/2);g.strokeRect(x,cy+E.GAP/2,E.PIPE_W,E.GROUND-cy-E.GAP/2);}
-g.fillStyle='#f7d51d';g.beginPath();g.arc(E.BIRD_X,y,E.BIRD_R,0,7);g.fill();g.stroke();
-g.fillStyle='#fff';g.font='bold 30px Georgia';g.textAlign='center';g.fillText(score,E.W/2,60);}
-async function run(){clearInterval(timer);const r=await fetch('/api/play?seed='+seed.value+'&max_steps='+ms.value);const d=await r.json();
+function pipe(x,y,h,E,cap){g.fillStyle='#5aa02c';g.fillRect(x,y,E.PIPE_W,h);g.strokeStyle='#2f5d16';g.lineWidth=2;g.strokeRect(x,y,E.PIPE_W,h);
+g.fillStyle='#74c043';g.fillRect(x-3,cap,E.PIPE_W+6,14);g.strokeRect(x-3,cap,E.PIPE_W+6,14);}
+function draw(f,E){const[y,pipes,score]=f;const sky=g.createLinearGradient(0,0,0,E.GROUND);sky.addColorStop(0,'#4ec0ca');sky.addColorStop(1,'#bfe9ee');
+g.fillStyle=sky;g.fillRect(0,0,E.W,E.GROUND);
+for(const[x,cy]of pipes){const t=cy-E.GAP/2,b=cy+E.GAP/2;pipe(x,0,t,E,t-14);pipe(x,b,E.GROUND-b,E,b);}
+g.fillStyle='#ded895';g.fillRect(0,E.GROUND,E.W,E.H-E.GROUND);g.fillStyle='#8fcf4a';g.fillRect(0,E.GROUND,E.W,10);
+g.fillStyle='#f7d51d';g.strokeStyle='#000';g.lineWidth=1.5;g.beginPath();g.arc(E.BIRD_X,y,E.BIRD_R,0,7);g.fill();g.stroke();
+g.fillStyle='#fff';g.beginPath();g.arc(E.BIRD_X+4,y-3,3.5,0,7);g.fill();g.fillStyle='#000';g.beginPath();g.arc(E.BIRD_X+5,y-3,1.5,0,7);g.fill();
+g.fillStyle='#f08a24';g.fillRect(E.BIRD_X+9,y+1,7,4);
+g.fillStyle='#fff';g.strokeStyle='#000';g.lineWidth=3;g.font='bold 34px Georgia';g.textAlign='center';g.strokeText(score,E.W/2,60);g.fillText(score,E.W/2,60);}
+async function run(){clearInterval(timer);go.disabled=true;const r=await fetch('/api/play?seed='+seed.value+'&max_steps='+ms.value);const d=await r.json();go.disabled=false;
 sc.textContent=d.score;st.textContent=d.steps;rs.textContent=d.crashed?'Choque':'Superó el límite';let k=0;
-timer=setInterval(()=>{draw(d.frames[k],d.env);act.textContent=k?('Acción: '+(d.frames[k][3]?'saltar':'no hacer nada')):'';if(++k>=d.frames.length)clearInterval(timer);},25);}
-go.onclick=run;run();
+timer=setInterval(()=>{draw(d.frames[k],d.env);act.textContent=k?('Acción: '+(d.frames[k][3]?'🔼 saltar':'⏬ no hacer nada')+' · paso '+k):'';if(++k>=d.frames.length)clearInterval(timer);},+sp.value);}
+go.onclick=run;rnd.onclick=()=>{seed.value=Math.floor(Math.random()*90000);run();};run();
 </script></body></html>"""
